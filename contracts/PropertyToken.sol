@@ -69,6 +69,10 @@ contract PropertyToken is ERC1155, AccessControl, Pausable {
         _unpause();
     }
 
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory values) internal virtual override whenNotPaused {
+        super._update(from, to, ids, values);
+    }
+
     // Override required by Solidity for multiple inheritance
     function supportsInterface(bytes4 interfaceId) public view override(ERC1155, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
