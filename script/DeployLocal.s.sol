@@ -23,7 +23,7 @@ contract DeployLocalScript is Script {
         MockUSDC paymentToken = new MockUSDC();
 
         // Deploy Core Contracts
-        PropertyToken token = new PropertyToken("https://propfrac.app/api/properties/");
+        PropertyToken token = new PropertyToken("https://propfrac.app/api/properties/", false);
         PropertyManager manager = new PropertyManager(address(token), address(paymentToken));
         RentalDistributor distributor = new RentalDistributor(address(token), address(paymentToken));
 

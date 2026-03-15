@@ -13,7 +13,7 @@ contract DeployScript is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        PropertyToken token = new PropertyToken("https://propfrac.app/api/properties/");
+        PropertyToken token = new PropertyToken("https://propfrac.app/api/properties/", false);
         PropertyManager manager = new PropertyManager(address(token), paymentToken);
         RentalDistributor distributor = new RentalDistributor(address(token), paymentToken);
 

@@ -27,7 +27,7 @@ contract PropFracTest is Test {
     function setUp() public {
         vm.startPrank(owner);
         mockUsdc = new MockUSDC();
-        propertyToken = new PropertyToken("ipfs://baseuri/");
+        propertyToken = new PropertyToken("ipfs://baseuri/", false);
         propertyManager = new PropertyManager(address(propertyToken), address(mockUsdc));
         rentalDistributor = new RentalDistributor(address(propertyToken), address(mockUsdc));
 

@@ -14,6 +14,10 @@ contract PropertyToken is ERC1155, AccessControl, Pausable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
+    // KYC/AML compliance (Aligned with BaseRWA pattern)
+    mapping(address => bool) public isWhitelisted;
+    bool public requiresKYC;
+
     // Mapping from property ID to total fractions (supply)
     mapping(uint256 => uint256) public propertySupply;
     // Mapping from property ID to whether it exists
@@ -23,12 +27,25 @@ contract PropertyToken is ERC1155, AccessControl, Pausable {
     string private _baseURI;
 
     event PropertyCreated(uint256 indexed propertyId, uint256 totalFractions);
+    event WhitelistUpdated(address indexed account, bool status);
+    event KYCRequirementChanged(bool required);
 
-    constructor(string memory baseURI) ERC1155("") {
+    constructor(string memory baseURI, bool _requiresKYC) ERC1155("") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
         _baseURI = baseURI;
+        requiresKYC = _requiresKYC;
+    }
+
+    function setWhitelist(address account, bool status) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        isWhitelisted[account] = status;
+        emit WhitelistUpdated(account, status);
+    }
+    
+    function setRequiresKYC(bool required) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        requiresKYC = required;
+        emit KYCRequirementChanged(required);
     }
 
     function setBaseURI(string memory newuri) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -70,6 +87,9 @@ contract PropertyToken is ERC1155, AccessControl, Pausable {
     }
 
     function _update(address from, address to, uint256[] memory ids, uint256[] memory values) internal virtual override whenNotPaused {
+        if (requiresKYC && from != address(0) && to != address(0)) {
+            require(isWhitelisted[from] && isWhitelisted[to], "KYC required for transfer");
+        }
         super._update(from, to, ids, values);
     }
 
