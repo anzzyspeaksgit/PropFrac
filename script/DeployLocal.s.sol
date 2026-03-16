@@ -9,7 +9,7 @@ import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "USDC") {
-        _mint(msg.sender, 1_000_000 * 10**18); // Mint 1M USDC to deployer
+        _mint(msg.sender, 1_000_000 * 10 ** 18); // Mint 1M USDC to deployer
     }
 }
 
@@ -34,10 +34,10 @@ contract DeployLocalScript is Script {
 
         // Optional: Create a test property
         token.createProperty(1, 100); // Property ID 1, 100 fractions
-        manager.createListing(1, 50, 1000 * 10**18); // List 50 fractions at 1000 USDC each
+        manager.createListing(1, 50, 1000 * 10 ** 18); // List 50 fractions at 1000 USDC each
 
         vm.stopBroadcast();
-        
+
         // Log outputs for frontend
         console.log("Mock USDC:", address(paymentToken));
         console.log("PropertyToken:", address(token));
