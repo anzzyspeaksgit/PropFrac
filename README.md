@@ -1,66 +1,39 @@
-## Foundry
+# PropFrac
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+PropFrac is a fractional real estate investment platform built on the BNB Chain. It tokenizes high-value real estate into accessible ERC1155 fractions, enabling investors to own a piece of premium properties and earn proportional rental yield.
 
-Foundry consists of:
+## Overview
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- **Contracts:** Foundry, Solidity 0.8.20+, OpenZeppelin
+- **Frontend:** Next.js 14, TailwindCSS, shadcn/ui, wagmi, viem, RainbowKit
+- **Network:** BNB Testnet
 
-## Documentation
+## Project Structure
 
-https://book.getfoundry.sh/
+- `/contracts/`: Core smart contracts (`PropertyToken`, `PropertyManager`, `RentalDistributor`).
+- `/test/`: Comprehensive Forge tests (>95% coverage).
+- `/script/`: Deployment scripts for local and testnet environments.
+- `/frontend/`: Next.js DApp for browsing and investing in properties.
+- `/docs/`: Protocol architecture and documentation.
 
-## Usage
+## Smart Contracts
 
-### Build
+The contracts phase is fully complete:
+- `PropertyToken` (ERC1155): Includes robust role-based access control and KYC/AML compliance features.
+- `PropertyManager`: Facilitates the primary listing and sale of property fractions.
+- `RentalDistributor`: Distributes USDC rental yields proportionally to fractional owners.
 
-```shell
-$ forge build
+## Getting Started
+
+### Smart Contracts
+```bash
+make build
+make test
 ```
 
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
 ```
