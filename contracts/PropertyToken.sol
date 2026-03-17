@@ -10,7 +10,9 @@ import { Strings } from "openzeppelin-contracts/contracts/utils/Strings.sol";
  * @title PropertyToken
  * @dev ERC1155 token representing fractional ownership of real estate properties.
  */
-contract PropertyToken is ERC1155, AccessControl, Pausable {
+import { ERC2981 } from "openzeppelin-contracts/contracts/token/common/ERC2981.sol";
+
+contract PropertyToken is ERC1155, AccessControl, Pausable, ERC2981 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
@@ -41,6 +43,25 @@ contract PropertyToken is ERC1155, AccessControl, Pausable {
         _grantRole(ORACLE_ROLE, msg.sender);
         _baseURI = baseURI;
         requiresKYC = _requiresKYC;
+
+        // Default royalty: 5% to the contract deployer (can be updated per-token)
+        _setDefaultRoyalty(msg.sender, 500);
+    }
+
+    function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setDefaultRoyalty(receiver, feeNumerator);
+    }
+
+    function setTokenRoyalty(
+        uint256 propertyId,
+        address receiver,
+        uint96 feeNumerator
+    )
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(propertyExists[propertyId], "PropertyToken: Property does not exist");
+        _setTokenRoyalty(propertyId, receiver, feeNumerator);
     }
 
     function updatePropertyValuation(uint256 propertyId, uint256 newValuation) external onlyRole(ORACLE_ROLE) {
@@ -124,7 +145,12 @@ contract PropertyToken is ERC1155, AccessControl, Pausable {
     }
 
     // Override required by Solidity for multiple inheritance
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155, AccessControl, ERC2981)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 }
