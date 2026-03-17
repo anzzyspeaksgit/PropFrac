@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {PropertyToken} from "./PropertyToken.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
-import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
-import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import { PropertyToken } from "./PropertyToken.sol";
+import { ReentrancyGuard } from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
+import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
+import { Pausable } from "openzeppelin-contracts/contracts/utils/Pausable.sol";
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title RentalDistributor
  * @dev Handles distribution of rental yields to fractional property owners.
  */
-contract RentalDistributor is ReentrancyGuard, Ownable {
+contract RentalDistributor is ReentrancyGuard, Ownable, Pausable {
     using SafeERC20 for IERC20;
 
     PropertyToken public propertyToken;
@@ -40,7 +41,7 @@ contract RentalDistributor is ReentrancyGuard, Ownable {
         paymentToken = IERC20(_paymentToken);
     }
 
-    function distributeYield(uint256 propertyId, uint256 amount) external nonReentrant onlyOwner {
+    function distributeYield(uint256 propertyId, uint256 amount) external nonReentrant onlyOwner whenNotPaused {
         require(propertyToken.propertyExists(propertyId), "Property does not exist");
         uint256 totalFractions = propertyToken.propertySupply(propertyId);
         require(totalFractions > 0, "No fractions exist");
@@ -49,12 +50,14 @@ contract RentalDistributor is ReentrancyGuard, Ownable {
         uint256 amountPerFraction = amount / totalFractions;
         require(amountPerFraction > 0, "Amount too small");
 
-        distributions[propertyId].push(RentalDistribution({
-            propertyId: propertyId,
-            totalAmount: amount,
-            timestamp: block.timestamp,
-            amountPerFraction: amountPerFraction
-        }));
+        distributions[propertyId].push(
+            RentalDistribution({
+                propertyId: propertyId,
+                totalAmount: amount,
+                timestamp: block.timestamp,
+                amountPerFraction: amountPerFraction
+            })
+        );
 
         // Transfer funds from owner to this contract for distribution
         paymentToken.safeTransferFrom(msg.sender, address(this), amount);
@@ -62,7 +65,7 @@ contract RentalDistributor is ReentrancyGuard, Ownable {
         emit YieldDistributed(propertyId, amount, amountPerFraction);
     }
 
-    function claimYield(uint256 propertyId) external nonReentrant {
+    function claimYield(uint256 propertyId) external nonReentrant whenNotPaused {
         uint256 userFractions = propertyToken.balanceOf(msg.sender, propertyId);
         require(userFractions > 0, "No fractions owned");
 
@@ -96,5 +99,18 @@ contract RentalDistributor is ReentrancyGuard, Ownable {
             totalClaim += distributions[propertyId][i].amountPerFraction * userFractions;
         }
         return totalClaim;
+    }
+
+    function emergencyWithdraw(uint256 amount) external onlyOwner {
+        require(amount <= paymentToken.balanceOf(address(this)), "Insufficient balance");
+        paymentToken.safeTransfer(owner(), amount);
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
     }
 }
